@@ -137,6 +137,34 @@ whole 64-team result.
 
 ---
 
+## Polymarket cross-check
+
+Polymarket's 2026 title market is liquid, so I swapped **only the title prices** and kept the
+same Kalshi bracket, game prices, Elo priors, and Michigan winner. That isolates the title-market
+comparison.
+
+| Market | Title prices sum | Top prices | Trades at 3c / 60% | P&L |
+|---|---:|---|---:|---:|
+| Kalshi | 1.22 | Duke 19.5, Michigan 17.5, Arizona 17.5 | 4 | −10.7c |
+| Polymarket | 1.054 | Michigan 18.5, Duke 18.5, Arizona 18.3 | 4 | **−10.8c ±24.3** |
+
+The same four **NO** bets appear on both venues: Michigan, Arizona, Florida, Duke. The model lost
+on Polymarket too. Its Brier was **1.36 vs 1.19** for the market, and log loss **0.0381 vs 0.0272**.
+The 90% filter gives **zero trades** on both.
+
+Polymarket's first-round **game** markets are too thin for a full bracket: several have no trade
+history at the cutoff (Tennessee/Miami, for example), so there is no honest game price to use.
+Title-only is the comparison the data supports.
+
+### Betfair
+
+**Blocked without an account.** The Exchange API needs an application key and session token, and
+historical odds come from the paid Historic Data service. There are no credentials in this
+environment, so Betfair is not included and nothing is faked. To add it, provide
+`BETFAIR_APP_KEY` and `BETFAIR_SESSION_TOKEN` plus historical-package access.
+
+---
+
 ## What the graphs show
 
 The full report has four visuals:
@@ -170,6 +198,10 @@ python3 replay.py --season 2026 --title-event KXNCAAMBCBC-26 \
 # Sweep the filters and rebuild the report
 python3 sweep.py --dir replays --fee 0.02 --draws 1000
 python3 report.py
+
+# Polymarket title-only cross-check
+python3 fetch_polymarket.py
+python3 sweep.py --dir cross --fee 0.02 --draws 1000
 
 # Open the self-contained page
 python3 -m http.server 8000
@@ -208,14 +240,17 @@ error bars smaller, but the data is not there yet.
 | `report.py` | Build the self-contained HTML report and CSV |
 | `backtest.py` | Synthetic backtest (the wind tunnel, not the real test) |
 | `fetch_kalshi.py` | Live Kalshi prices for current markets |
+| `fetch_polymarket.py` | Polymarket title prices, mapped onto the Kalshi bracket |
 | `visual.py` | Model-vs-market viewer for one CSV |
 | `replays/` | The two real tournament CSVs |
+| `cross/` | The Polymarket title-only cross-check |
 | `report.html` | The shareable report (no external assets) |
 | `report.png` | Full-page screenshot |
 | `report_data.csv` | Every team's model, market, edge, sure, and result |
 
-Prices are from Kalshi’s public historical API: 1-minute candles, midpoint of YES bid/ask, at a
-cutoff before the tournament. Ratings use regular-season Elo only. No future games, no lookahead.
+Main prices are from Kalshi’s public historical API: 1-minute candles, midpoint of YES bid/ask,
+at a cutoff before the tournament. The Polymarket cross-check uses its public title market at the
+same cutoff. Ratings use regular-season Elo only. No future games, no lookahead.
 
 ---
 

@@ -1,0 +1,162 @@
+tournament,type,a,b,pa,pb
+p_ncaa_2026,prior,Wright St.,,0.40160713711891133,
+p_ncaa_2026,prior,Virginia,,1.1059333786233614,
+p_ncaa_2026,prior,Tennessee,,0.4751516392382411,
+p_ncaa_2026,prior,Miami (OH),,0.9581849096457099,
+p_ncaa_2026,prior,Kentucky,,0.35994026599594053,
+p_ncaa_2026,prior,Santa Clara,,0.8425059351201035,
+p_ncaa_2026,prior,Tennessee St.,,0.5873792922749047,
+p_ncaa_2026,prior,Iowa St.,,0.8954988834670763,
+p_ncaa_2026,prior,Georgia,,0.6001427922885386,
+p_ncaa_2026,prior,Saint Louis,,0.9608942773728703,
+p_ncaa_2026,prior,Michigan,,1.328634442231256,
+p_ncaa_2026,prior,Howard,,0.4181464485519974,
+p_ncaa_2026,prior,Texas Tech,,0.6632329636039972,
+p_ncaa_2026,prior,Akron,,0.7117412295844662,
+p_ncaa_2026,prior,Hofstra,,0.5104149783781115,
+p_ncaa_2026,prior,Alabama,,0.7140047593632203,
+p_ncaa_2026,prior,Texas,,0.18470340995324222,
+p_ncaa_2026,prior,BYU,,0.514190126281618,
+p_ncaa_2026,prior,Kennesaw St.,,0.15505178170337433,
+p_ncaa_2026,prior,Gonzaga,,1.1136476300669802,
+p_ncaa_2026,prior,Queens University,,0.15211115241524023,
+p_ncaa_2026,prior,Purdue,,0.8200187105396037,
+p_ncaa_2026,prior,Missouri,,0.37699342952907805,
+p_ncaa_2026,prior,Miami (FL),,0.780877445894106,
+p_ncaa_2026,prior,Wisconsin,,0.7132211652753216,
+p_ncaa_2026,prior,High Point,,0.7475878244403205,
+p_ncaa_2026,prior,Hawai'i,,0.4033968102813389,
+p_ncaa_2026,prior,Arkansas,,0.8131580903412405,
+p_ncaa_2026,prior,Villanova,,0.6932513743559903,
+p_ncaa_2026,prior,Utah St.,,0.9974438394138139,
+p_ncaa_2026,prior,LIU,,0.38919844988667207,
+p_ncaa_2026,prior,Arizona,,1.320450670123095,
+p_ncaa_2026,prior,Vanderbilt,,0.9387010711905074,
+p_ncaa_2026,prior,McNeese,,0.7047851424365285,
+p_ncaa_2026,prior,Troy,,0.3641897238305301,
+p_ncaa_2026,prior,Nebraska,,0.8242139206972501,
+p_ncaa_2026,prior,Iowa,,0.36516240466095967,
+p_ncaa_2026,prior,Clemson,,0.6705763708172174,
+p_ncaa_2026,prior,Prairie View A&M,,-0.2973811027297552,
+p_ncaa_2026,prior,Florida,,0.9425694215826327,
+p_ncaa_2026,prior,VCU,,0.8572284927088893,
+p_ncaa_2026,prior,North Carolina,,0.7433184654965305,
+p_ncaa_2026,prior,Penn,,0.24704387015526377,
+p_ncaa_2026,prior,Illinois,,0.7080585855408987,
+p_ncaa_2026,prior,Texas A&M,,0.459530913649848,
+p_ncaa_2026,prior,Saint Mary's,,0.9593598774877653,
+p_ncaa_2026,prior,Idaho,,0.06332441905178048,
+p_ncaa_2026,prior,Houston,,1.005464248193185,
+p_ncaa_2026,prior,Northern Iowa,,0.1565426026660628,
+p_ncaa_2026,prior,St. John's,,0.9796816657799404,
+p_ncaa_2026,prior,Kansas,,0.701780107595457,
+p_ncaa_2026,prior,California Baptist,,0.44587891203775304,
+p_ncaa_2026,prior,TCU,,0.5266978012318121,
+p_ncaa_2026,prior,Ohio St.,,0.342894293125835,
+p_ncaa_2026,prior,Siena,,0.10155495312440947,
+p_ncaa_2026,prior,Duke,,1.3276297478686439,
+p_ncaa_2026,prior,North Dakota St.,,0.6099348291084707,
+p_ncaa_2026,prior,Michigan St.,,0.8044593405857432,
+p_ncaa_2026,prior,South Florida,,0.7131731030350466,
+p_ncaa_2026,prior,Louisville,,0.5847751488198744,
+p_ncaa_2026,prior,UCLA,,0.5715979298018073,
+p_ncaa_2026,prior,UCF,,0.4477922947246693,
+p_ncaa_2026,prior,Furman,,0.39200722578146724,
+p_ncaa_2026,prior,UConn,,1.1486268925416294,
+p_ncaa_2026,game,Wright St.,Virginia,0.065,0.935
+p_ncaa_2026,game,Tennessee,Miami (OH),0.835,0.175
+p_ncaa_2026,game,Kentucky,Santa Clara,0.585,0.415
+p_ncaa_2026,game,Tennessee St.,Iowa St.,0.035,0.965
+p_ncaa_2026,game,Georgia,Saint Louis,0.575,0.435
+p_ncaa_2026,game,Michigan,Howard,0.985,0.015
+p_ncaa_2026,game,Texas Tech,Akron,0.74,0.265
+p_ncaa_2026,game,Hofstra,Alabama,0.14500000000000002,0.855
+p_ncaa_2026,game,Texas,BYU,0.435,0.565
+p_ncaa_2026,game,Kennesaw St.,Gonzaga,0.045,0.955
+p_ncaa_2026,game,Queens University,Purdue,0.025,0.975
+p_ncaa_2026,game,Missouri,Miami (FL),0.455,0.555
+p_ncaa_2026,game,Wisconsin,High Point,0.805,0.195
+p_ncaa_2026,game,Hawai'i,Arkansas,0.095,0.905
+p_ncaa_2026,game,Villanova,Utah St.,0.455,0.545
+p_ncaa_2026,game,LIU,Arizona,0.015,0.985
+p_ncaa_2026,game,Vanderbilt,McNeese,0.855,0.14500000000000002
+p_ncaa_2026,game,Troy,Nebraska,0.11499999999999999,0.885
+p_ncaa_2026,game,Iowa,Clemson,0.56,0.445
+p_ncaa_2026,game,Prairie View A&M,Florida,0.015,0.985
+p_ncaa_2026,game,VCU,North Carolina,0.425,0.575
+p_ncaa_2026,game,Penn,Illinois,0.035,0.965
+p_ncaa_2026,game,Texas A&M,Saint Mary's,0.41000000000000003,0.595
+p_ncaa_2026,game,Idaho,Houston,0.025,0.975
+p_ncaa_2026,game,Northern Iowa,St. John's,0.175,0.825
+p_ncaa_2026,game,Kansas,California Baptist,0.9,0.095
+p_ncaa_2026,game,TCU,Ohio St.,0.425,0.575
+p_ncaa_2026,game,Siena,Duke,0.015,0.985
+p_ncaa_2026,game,North Dakota St.,Michigan St.,0.07500000000000001,0.925
+p_ncaa_2026,game,South Florida,Louisville,0.365,0.635
+p_ncaa_2026,game,UCLA,UCF,0.69,0.32
+p_ncaa_2026,game,Furman,UConn,0.045,0.955
+p_ncaa_2026,title,Wright St.,,0.000500,
+p_ncaa_2026,title,Virginia,,0.008500,
+p_ncaa_2026,title,Tennessee,,0.005500,
+p_ncaa_2026,title,Miami (OH),,0.000500,
+p_ncaa_2026,title,Kentucky,,0.003500,
+p_ncaa_2026,title,Santa Clara,,0.000500,
+p_ncaa_2026,title,Tennessee St.,,0.000500,
+p_ncaa_2026,title,Iowa St.,,0.056500,
+p_ncaa_2026,title,Georgia,,0.001500,
+p_ncaa_2026,title,Saint Louis,,0.000500,
+p_ncaa_2026,title,Michigan,,0.185000,
+p_ncaa_2026,title,Howard,,0.000500,
+p_ncaa_2026,title,Texas Tech,,0.003500,
+p_ncaa_2026,title,Akron,,0.000500,
+p_ncaa_2026,title,Hofstra,,0.000500,
+p_ncaa_2026,title,Alabama,,0.004500,
+p_ncaa_2026,title,Texas,,0.000500,
+p_ncaa_2026,title,BYU,,0.003500,
+p_ncaa_2026,title,Kennesaw St.,,0.000500,
+p_ncaa_2026,title,Gonzaga,,0.014500,
+p_ncaa_2026,title,Queens University,,0.000500,
+p_ncaa_2026,title,Purdue,,0.035500,
+p_ncaa_2026,title,Missouri,,0.001500,
+p_ncaa_2026,title,Miami (FL),,0.002500,
+p_ncaa_2026,title,Wisconsin,,0.005500,
+p_ncaa_2026,title,High Point,,0.000500,
+p_ncaa_2026,title,Hawai'i,,0.000500,
+p_ncaa_2026,title,Arkansas,,0.017500,
+p_ncaa_2026,title,Villanova,,0.001500,
+p_ncaa_2026,title,Utah St.,,0.000500,
+p_ncaa_2026,title,LIU,,0.000500,
+p_ncaa_2026,title,Arizona,,0.183000,
+p_ncaa_2026,title,Vanderbilt,,0.009000,
+p_ncaa_2026,title,McNeese,,0.000500,
+p_ncaa_2026,title,Troy,,0.000500,
+p_ncaa_2026,title,Nebraska,,0.005500,
+p_ncaa_2026,title,Iowa,,0.001500,
+p_ncaa_2026,title,Clemson,,0.001500,
+p_ncaa_2026,title,Prairie View A&M,,0.000500,
+p_ncaa_2026,title,Florida,,0.093500,
+p_ncaa_2026,title,VCU,,0.000500,
+p_ncaa_2026,title,North Carolina,,0.002500,
+p_ncaa_2026,title,Penn,,0.000500,
+p_ncaa_2026,title,Illinois,,0.034500,
+p_ncaa_2026,title,Texas A&M,,0.001500,
+p_ncaa_2026,title,Saint Mary's,,0.002500,
+p_ncaa_2026,title,Idaho,,0.000500,
+p_ncaa_2026,title,Houston,,0.075000,
+p_ncaa_2026,title,Northern Iowa,,0.000500,
+p_ncaa_2026,title,St. John's,,0.014000,
+p_ncaa_2026,title,Kansas,,0.009500,
+p_ncaa_2026,title,California Baptist,,0.000500,
+p_ncaa_2026,title,TCU,,0.000500,
+p_ncaa_2026,title,Ohio St.,,0.002000,
+p_ncaa_2026,title,Siena,,0.000500,
+p_ncaa_2026,title,Duke,,0.185000,
+p_ncaa_2026,title,North Dakota St.,,0.000500,
+p_ncaa_2026,title,Michigan St.,,0.013000,
+p_ncaa_2026,title,South Florida,,0.000500,
+p_ncaa_2026,title,Louisville,,0.006500,
+p_ncaa_2026,title,UCLA,,0.005000,
+p_ncaa_2026,title,UCF,,0.000500,
+p_ncaa_2026,title,Furman,,0.000500,
+p_ncaa_2026,title,UConn,,0.044000,
+p_ncaa_2026,winner,Michigan,,,
