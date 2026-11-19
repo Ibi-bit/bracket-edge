@@ -204,19 +204,19 @@ def section(t, mr, model, note, stake):
     if model:
         legend = ('<div class="legend">'
                   '<span><i class="lg-dot"></i>model mean</span>'
-                  '<span><i class="lg-tick"></i>market YES ask</span>'
+                  '<span><i class="lg-tick"></i>market price</span>'
                   '<span><i class="lg-range"></i>90% range</span>'
                   '</div>')
     else:
         legend = ('<div class="legend"><span><i class="lg-bar"></i>'
-                  'YES ask, sorted by price</span></div>')
+                  'market price, sorted by price</span></div>')
     note_html = f'<p class="note">{note}</p>' if note else ""
     return (f'<section class="panel tour">'
             f'<div class="tour-head"><h2>{esc(t.name)}</h2><span>{meta}</span></div>'
             f'{note_html}{axis}<div class="rows">{body}</div>{legend}</section>')
 
 
-def scatter(points):
+def scatter(points, min_edge=MIN_EDGE, min_sure=MIN_SURE):
     """Edge against sure: the two flag criteria, one point per team."""
     if not points:
         return ""
@@ -249,33 +249,35 @@ def scatter(points):
         parts.append(f'<text x="{left - 8}" y="{y(v) + 3:.1f}" fill="#8fa1bd" '
                      f'font-size="10" text-anchor="end">{v * 100:.0f}c</text>')
 
-    parts.append(f'<line x1="{x(0.9):.1f}" y1="{top}" x2="{x(0.9):.1f}" y2="{h - bottom}" '
+    parts.append(f'<line x1="{x(min_sure):.1f}" y1="{top}" x2="{x(min_sure):.1f}" y2="{h - bottom}" '
                  f'stroke="#fbbf24" stroke-dasharray="4 4" opacity=".65"/>')
-    parts.append(f'<text x="{x(0.9) - 6:.1f}" y="{top + 12}" fill="#fbbf24" '
-                 f'font-size="10" text-anchor="end">sure 90%</text>')
-    parts.append(f'<line x1="{left}" y1="{y(0.03):.1f}" x2="{w - right}" y2="{y(0.03):.1f}" '
+    parts.append(f'<text x="{x(min_sure) - 6:.1f}" y="{top + 12}" fill="#fbbf24" '
+                 f'font-size="10" text-anchor="end">sure {min_sure * 100:.0f}%</text>')
+    parts.append(f'<line x1="{left}" y1="{y(min_edge):.1f}" x2="{w - right}" y2="{y(min_edge):.1f}" '
                  f'stroke="#fbbf24" stroke-dasharray="4 4" opacity=".65"/>')
-    parts.append(f'<text x="{left + 6}" y="{y(0.03) - 6:.1f}" fill="#fbbf24" '
-                 f'font-size="10">edge 3c</text>')
+    parts.append(f'<text x="{left + 6}" y="{y(min_edge) - 6:.1f}" fill="#fbbf24" '
+                 f'font-size="10">edge {min_edge * 100:.0f}c</text>')
 
     flagged = sorted((p for p in points if p["action"] != "-"),
                      key=lambda p: -p["edge"])[:24]
     for p in points:
         colour = ("#34d399" if p["action"] == "YES"
                   else "#f87171" if p["action"] == "NO" else "#64748b")
-        tip = (f'{p["tournament"]} / {p["team"]}: edge {cents(p["edge"])}, '
+        team = str(p["team"])
+        tip = (f'{p["tournament"]} / {team}: edge {cents(p["edge"])}, '
                f'sure {p["sure"] * 100:.0f}%')
         parts.append(f'<circle cx="{x(clamp(p["sure"])):.1f}" cy="{y(p["edge"]):.1f}" r="4.5" '
                      f'fill="{colour}" stroke="#0f172a" stroke-width="1.5">'
                      f'<title>{esc(tip)}</title></circle>')
     for p in flagged:
         px, py = x(clamp(p["sure"])), y(p["edge"])
+        team = str(p["team"])
         if px > w - right - 72:
             parts.append(f'<text x="{px - 7:.1f}" y="{py + 4:.1f}" fill="#cbd5e1" '
-                         f'font-size="10" text-anchor="end">{esc(p["team"])}</text>')
+                         f'font-size="10" text-anchor="end">{esc(team)}</text>')
         else:
             parts.append(f'<text x="{px + 7:.1f}" y="{py + 4:.1f}" fill="#cbd5e1" '
-                         f'font-size="10">{esc(p["team"])}</text>')
+                         f'font-size="10">{esc(team)}</text>')
 
     parts.append(f'<text x="{(left + w - right) / 2:.1f}" y="{h - 8}" fill="#8fa1bd" '
                  f'font-size="11" text-anchor="middle">sure — share of runs the trade still profits</text>')
@@ -284,8 +286,8 @@ def scatter(points):
                  f'transform="rotate(-90 14 {cy:.1f})">edge per $1 contract (c)</text>')
     parts.append("</svg>")
     return ('<section class="panel scatter"><h2>Where the flags are</h2>'
-            '<p class="note">Top right of the dashed lines is a trade: edge at least 3c and '
-            'sure at least 90%. Hover a point for exact numbers.</p>'
+            f'<p class="note">Top right of the dashed lines is a trade: edge at least {min_edge * 100:.0f}c and '
+            f'sure at least {min_sure * 100:.0f}%. Hover a point for exact numbers.</p>'
             + "".join(parts) + "</section>")
 
 
@@ -388,9 +390,9 @@ def main(argv=None):
 {stake_html}
 <section class="cards">{card_html}</section>
 {''.join(sections)}
-{scatter(points)}
+{scatter(points, a.min_edge, a.min_sure)}
 {script}
-<footer>Generated from {esc(a.csv)}. Prices are YES asks. Expected profit assumes every
+<footer>Generated from {esc(a.csv)}. Prices are from the CSV (live Kalshi asks or replay midpoints). Expected profit assumes every
 flagged trade pays the model edge; it ignores liquidity, slippage and being wrong. This is
 a simulation, not financial advice.</footer>
 </div></body></html>

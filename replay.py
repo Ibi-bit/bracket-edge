@@ -9,7 +9,7 @@ The cutoff is after the First Four and before the Round of 64, so no
 tournament result leaks into the prices. The prior is Elo from regular-season
 results only, also cut off before the tournament.
 """
-import argparse, datetime, json, time, urllib.error, urllib.request
+import argparse, csv, datetime, json, time, urllib.error, urllib.request
 from pathlib import Path
 
 BASE = "https://api.elections.kalshi.com/trade-api/v2"
@@ -137,10 +137,10 @@ def elo(games, cutoff):
 
 
 def candle(ticker, cutoff, cache, refresh=False):
-    path = cache / "candles" / f"{ticker}.json"
-    if path.exists() and not refresh:
-        return json.load(open(path))
-    path.parent.mkdir(parents=True, exist_ok=True)
+    key = cache / "candles" / cutoff.strftime("%Y%m%dT%H%M%SZ") / f"{ticker}.json"
+    if key.exists() and not refresh:
+        return json.load(open(key))
+    key.parent.mkdir(parents=True, exist_ok=True)
     lo = int((cutoff - datetime.timedelta(days=5)).timestamp())
     hi = int((cutoff + datetime.timedelta(hours=1)).timestamp())
     d = get(f"{BASE}/historical/markets/{ticker}/candlesticks"
@@ -149,9 +149,13 @@ def candle(ticker, cutoff, cache, refresh=False):
     val = None
     if cs:
         c = cs[-1]
-        val = {"ask": float(c["yes_ask"]["close"]), "bid": float(c["yes_bid"]["close"]),
-               "ts": c["end_period_ts"]}
-    json.dump(val, open(path, "w"))
+        ask = c["yes_ask"].get("close")
+        bid = c["yes_bid"].get("close")
+        if ask is not None and bid is not None:
+            af, bf = float(ask), float(bid)
+            if 0 <= af <= 1 and 0 <= bf <= 1 and np.isfinite(af) and np.isfinite(bf):
+                val = {"ask": af, "bid": bf, "ts": c["end_period_ts"]}
+    json.dump(val, open(key, "w"))
     time.sleep(0.3)
     return val
 
@@ -167,7 +171,9 @@ def main(argv=None):
                    help="regular-season results only")
     p.add_argument("--title-event", default=None)
     p.add_argument("--max-title-spread", type=float, default=0.10,
-                   help="skip a tournament when title quotes are this wide (stale 50/50)")
+                   help="reject a tournament when title quotes are this wide (stale 50/50)")
+    p.add_argument("--max-game-spread", type=float, default=0.20,
+                   help="reject a game quote when ask-bid exceeds this (stale)")
     p.add_argument("--out", default="replay.csv")
     p.add_argument("--cache", default=str(HERE / "cache"))
     p.add_argument("--refresh", action="store_true")
@@ -211,6 +217,12 @@ def main(argv=None):
         cb = candle(g["tickers"][b_], cutoff, cache, a.refresh)
         if not ca or not cb:
             raise SystemExit(f"no candle for {g['event']}")
+        if ca["ask"] - ca["bid"] > a.max_game_spread:
+            raise SystemExit(f"{a_}: stale game quote bid {ca['bid']:.2f} "
+                             f"ask {ca['ask']:.2f} (spread > {a.max_game_spread:.2f})")
+        if cb["ask"] - cb["bid"] > a.max_game_spread:
+            raise SystemExit(f"{b_}: stale game quote bid {cb['bid']:.2f} "
+                             f"ask {cb['ask']:.2f} (spread > {a.max_game_spread:.2f})")
         rows.append((label, "game", a_, b_,
                      (ca["ask"] + ca["bid"]) / 2, (cb["ask"] + cb["bid"]) / 2))
     for t in teams:
@@ -224,9 +236,10 @@ def main(argv=None):
     rows.append((label, "winner", champion, "", "", ""))
 
     with open(a.out, "w", newline="") as f:
-        f.write("tournament,type,a,b,pa,pb\n")
+        w = csv.writer(f)
+        w.writerow(["tournament", "type", "a", "b", "pa", "pb"])
         for r in rows:
-            f.write(",".join(str(x) for x in r) + "\n")
+            w.writerow(r)
     print(f"{a.out}: {len(first)} first-round games, {len(teams)} teams, champion {champion}")
 
 

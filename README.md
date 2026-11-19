@@ -149,7 +149,7 @@ comparison.
 | Polymarket | 1.054 | Michigan 18.5, Duke 18.5, Arizona 18.3 | 4 | **−10.8c ±24.3** |
 
 The same four **NO** bets appear on both venues: Michigan, Arizona, Florida, Duke. The model lost
-on Polymarket too. Its Brier was **1.36 vs 1.19** for the market, and log loss **0.0381 vs 0.0272**.
+on Polymarket too. Its Brier (per-team ×100) was **1.36 vs 1.19** for the market, and log loss (per tournament) **2.44 vs 1.74**.
 The 90% filter gives **zero trades** on both.
 
 Polymarket's first-round **game** markets are too thin for a full bracket: several have no trade

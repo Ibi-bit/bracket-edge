@@ -16,12 +16,12 @@ from pathlib import Path
 
 import numpy as np
 
-from backtest import profit
+from backtest import mean_se, profit
 from bracket_edge import (
-    FEE, GAME_NOISE, PRIOR_SD,
+    FEE, GAME_NOISE, MIN_EDGE, MIN_SURE, PRIOR_SD,
     analyse, check, load_csv, rows,
 )
-from sweep import mean_se, score
+from sweep import score
 
 FILTERS = [
     (0.03, 0.90),
@@ -167,9 +167,9 @@ def bar(label, sub, value, lo, hi, colour, value_text):
             f'<div class="bval">{value_text}</div></div>')
 
 
-def whisker(label, sub, d, lo, hi):
+def whisker(label, d, lo, hi):
     if d["n"] == 0:
-        return (f'<div class="brow"><div class="blabel">{label}<small>{sub}</small></div>'
+        return (f'<div class="brow"><div class="blabel">{label}</div>'
                 f'<div class="btrack"><div class="bzero" style="left:{pos(0, lo, hi):.2f}%"></div></div>'
                 f'<div class="bval mut">no trades</div></div>')
     z, m = pos(0.0, lo, hi), pos(d["m"], lo, hi)
@@ -190,13 +190,12 @@ def whisker(label, sub, d, lo, hi):
 def filter_stats(all_rows, me, ms):
     xs = [r for r in all_rows if r["edge"] >= me and r["sure"] >= ms]
     if not xs:
-        return {"n": 0, "m": 0.0, "se": 0.0, "hit": 0.0, "pred": 0.0}
+        return {"n": 0, "m": 0.0, "se": 0.0, "hit": 0.0}
     vals = np.array([r["profit"] for r in xs])
     m = float(vals.mean())
     se = float(vals.std(ddof=1) / np.sqrt(len(vals))) if len(vals) > 1 else 0.0
     return {"n": len(xs), "m": m, "se": se,
-            "hit": float(np.mean(vals > 0)),
-            "pred": float(np.mean([r["edge"] for r in xs]))}
+            "hit": float(np.mean(vals > 0))}
 
 
 def collect(tours, a):
@@ -206,7 +205,6 @@ def collect(tours, a):
         res = analyse(t, a.draws, a.prior_sd, a.model_game_noise, rng)
         base = rows(t, res, a.fee, 0.0, 0.0)
         brier, logs = score(t, res)
-        title_sum = sum(t.title.values())
         trades = []
         for r in base:
             i = t.index(r["team"])
@@ -230,6 +228,10 @@ def collect(tours, a):
 
         vals = [r["profit"] for r in trades]
         m, se = mean_se(vals)
+        cash = sum(r["cash"] for r in trades)
+        without = getattr(a, "without_team", "West Virginia")
+        cash_no = sum(r["cash"] for r in trades if r["team"] != without)
+        has_without = any(r["team"] == without for r in trades)
         summaries.append({
             "name": t.name,
             "teams": len(t.teams),
@@ -238,22 +240,21 @@ def collect(tours, a):
             "mean": m,
             "se": se,
             "hit": float(np.mean([v > 0 for v in vals])) if vals else 0.0,
-            "cash": sum(r["cash"] for r in trades),
-            "cash_no_wv": sum(r["cash"] for r in trades if r["team"] != "West Virginia"),
-            "top_model": max(r["model"] for r in base),
-            "top_market": max(r["market"] for r in base) / title_sum,
+            "cash": cash,
+            "cash_no": cash_no,
+            "has_without": has_without,
             "brier": brier,
             "logs": logs,
         })
     return all_rows, summaries
 
 
-def data_csv(all_rows):
+def data_csv(all_rows, stake):
     out = io.StringIO()
     w = csv.writer(out)
     w.writerow(["tournament", "team", "model", "sd", "lo90", "hi90", "market",
                 "edge", "sure", "side", "action", "team_result", "trade_result",
-                "profit_per_contract", "cash_on_100"])
+                "profit_per_contract", "cash_on_stake"])
     for r in sorted(all_rows, key=lambda x: (x["tournament"], -x["edge"])):
         w.writerow([r["tournament"], r["team"],
                     f"{r['model']:.4f}", f"{r['sd']:.4f}",
@@ -264,7 +265,7 @@ def data_csv(all_rows):
     return out.getvalue()
 
 
-def trade_table(trades):
+def trade_table(trades, stake):
     body = ""
     for r in sorted(trades, key=lambda x: (-x["profit"], x["tournament"])):
         cls = "won" if r["profit"] > 0 else "lost"
@@ -284,7 +285,7 @@ def trade_table(trades):
             f'<th>Tournament</th><th>Team</th><th>Side</th><th class="num">Price</th>'
             f'<th class="num">Model</th><th class="num">Edge</th><th class="num">Sure</th>'
             f'<th>Team result</th><th>Trade</th><th class="num">Per $1</th>'
-            f'<th class="num">On $100</th></tr></thead><tbody>{body}</tbody></table></div>')
+            f'<th class="num">On {usd(stake)}</th></tr></thead><tbody>{body}</tbody></table></div>')
 
 
 def all_table(all_rows):
@@ -314,14 +315,16 @@ def main(argv=None):
     p.add_argument("--out", default="report.html")
     p.add_argument("--data", default="report_data.csv")
     p.add_argument("--fee", type=float, default=FEE)
-    p.add_argument("--min-edge", type=float, default=0.03)
-    p.add_argument("--min-sure", type=float, default=0.60)
+    p.add_argument("--min-edge", type=float, default=MIN_EDGE)
+    p.add_argument("--min-sure", type=float, default=MIN_SURE)
     p.add_argument("--stake", type=float, default=100.0,
                    help="cash staked per paper trade")
     p.add_argument("--draws", type=int, default=1000)
     p.add_argument("--prior-sd", type=float, default=PRIOR_SD)
     p.add_argument("--model-game-noise", type=float, default=GAME_NOISE)
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--without-team", default="West Virginia",
+                   help="team to exclude for 'without X' panel")
     a = p.parse_args(argv)
 
     tours = []
@@ -337,12 +340,18 @@ def main(argv=None):
     all_rows, summaries = collect(tours, a)
     trades = [r for r in all_rows if r["action"] != "-"]
     total_cash = sum(r["cash"] for r in trades)
-    total_no_wv = sum(r["cash"] for r in trades if r["team"] != "West Virginia")
     total_vals = [r["profit"] for r in trades]
     total_mean, total_se = mean_se(total_vals)
     total_hit = float(np.mean([v > 0 for v in total_vals])) if total_vals else 0.0
 
-    csv_text = data_csv(all_rows)
+    without = getattr(a, "without_team", "West Virginia")
+    has_without = any(r["team"] == without for r in trades)
+    if has_without:
+        total_no = sum(r["cash"] for r in trades if r["team"] != without)
+    else:
+        total_no = total_cash
+
+    csv_text = data_csv(all_rows, a.stake)
     Path(a.data).write_text(csv_text)
     b64 = base64.b64encode(csv_text.encode()).decode()
     download = f"data:text/csv;base64,{b64}"
@@ -352,7 +361,10 @@ def main(argv=None):
     all_vals = [s["cash"] for s in summaries] + [total_cash]
     all_lo = min(0.0, min(all_vals))
     all_hi = max(0.0, max(all_vals)) * 1.08 or 1.0
-    no_vals = [s["cash_no_wv"] for s in summaries] + [total_no_wv]
+    if has_without:
+        no_vals = [s["cash_no"] for s in summaries] + [total_no]
+    else:
+        no_vals = [s["cash"] for s in summaries] + [total_cash]
     no_lo = min(0.0, min(no_vals)) * 1.08
     no_hi = max(0.0, max(no_vals)) or 1.0
 
@@ -362,13 +374,14 @@ def main(argv=None):
         cash_all_rows += bar(esc(pretty(s["name"])), f"all {s['n']} trades", s["cash"],
                              all_lo, all_hi, "pos" if s["cash"] >= 0 else "neg",
                              signed_usd(s["cash"]))
-        cash_no_rows += bar(esc(pretty(s["name"])), "same trades", s["cash_no_wv"],
-                            no_lo, no_hi, "neg", signed_usd(s["cash_no_wv"]))
+        cash_no_val = s["cash_no"] if has_without else s["cash"]
+        cash_no_rows += bar(esc(pretty(s["name"])), "same trades", cash_no_val,
+                            no_lo, no_hi, "neg", signed_usd(cash_no_val))
     cash_all_rows += bar("Total", f"all {len(trades)} trades", total_cash,
                          all_lo, all_hi, "pos" if total_cash >= 0 else "neg",
                          signed_usd(total_cash))
-    cash_no_rows += bar("Total", "same trades", total_no_wv,
-                        no_lo, no_hi, "neg", signed_usd(total_no_wv))
+    cash_no_rows += bar("Total", "same trades", total_no,
+                        no_lo, no_hi, "neg", signed_usd(total_no))
 
     # Filter chart.
     fs = []
@@ -376,12 +389,15 @@ def main(argv=None):
         d = filter_stats(all_rows, me, ms)
         fs.append((me, ms, d))
     valid = [d for _, _, d in fs if d["n"] > 0]
-    flo = min(0.0, min(d["m"] - d["se"] for d in valid))
-    fhi = max(0.0, max(d["m"] + d["se"] for d in valid)) * 1.12 or 1.0
+    if valid:
+        flo = min(0.0, min(d["m"] - d["se"] for d in valid))
+        fhi = max(0.0, max(d["m"] + d["se"] for d in valid)) * 1.12 or 1.0
+    else:
+        flo, fhi = -0.01, 0.01
     filter_rows = ""
     for me, ms, d in fs:
         label = f"{me * 100:.0f}c / {ms * 100:.0f}%"
-        filter_rows += whisker(label, "", d, flo, fhi)
+        filter_rows += whisker(label, d, flo, fhi)
 
     # Forecast table.
     forecast_rows = ""
@@ -394,36 +410,52 @@ def main(argv=None):
                           f'<td class="{"pos" if model_wins else "neg"}">'
                           f'{"model" if model_wins else "market"}</td></tr>')
 
+    # Build cards dynamically
+    n_teams = sum(s["teams"] for s in summaries)
+    tightest = min((ms for me, ms in FILTERS if filter_stats(all_rows, me, ms)["n"] == 0),
+                   default=a.min_sure)
     cards = [
         ("Tournaments", len(summaries), "real, settled"),
-        ("Teams", sum(s["teams"] for s in summaries), "NCAA + Crown"),
+        ("Teams", n_teams, "across all tournaments"),
         ("Paper trades", len(trades), f"{a.min_edge * 100:.0f}c edge / {a.min_sure * 100:.0f}% sure"),
         ("Paper P&L", signed_usd(total_cash), f"on {usd(a.stake * len(trades))} staked"),
-        ("Without WV", signed_usd(total_no_wv), "the fragile part"),
     ]
+    if has_without:
+        cards.append((f"Without {without}", signed_usd(total_no), "the fragile part"))
     card_html = "".join(
         f'<div class="card"><div class="k">{k}</div>'
         f'<div class="v {"pos" if isinstance(v, str) and v.startswith("+") else "neg" if isinstance(v, str) and v.startswith("-") else ""}">{v}</div>'
         f'<div class="s">{s}</div></div>' for k, v, s in cards)
 
+        # Build tournament list for method section
+    tested_lines = ""
+    for s in summaries:
+        tested_lines += f'        <li><b>{esc(pretty(s["name"]))}:</b> {s["teams"]} teams. Champion: {esc(s["winner"])}.</li>\n'
+
+    n_teams = sum(s["teams"] for s in summaries)
+    tightest = min((ms for me, ms in FILTERS if filter_stats(all_rows, me, ms)["n"] == 0),
+                   default=a.min_sure)
+
     page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bracket model — real 2026 replay</title><style>{CSS}</style></head>
+<title>Bracket model — real replay</title><style>{CSS}</style></head>
 <body><div class="wrap">
 <header class="hero">
   <div class="eyebrow">Real prices · settled results</div>
   <h1>The bracket model, tested for real</h1>
-  <p class="sub">The model prices every team’s title chance from the bracket. When its number differs from the market by more than the fee, that gap is the “edge”. This is what happened when we ran it on Kalshi prices from before the tournament, then settled every trade.</p>
+  <p class="sub">The model prices every team's title chance from the bracket. When its number differs from the market by more than the fee, that gap is the "edge". This is what happened when we ran it on Kalshi prices from before the tournament, then settled every trade.</p>
 </header>
+"""
 
-<div class="alert"><div class="icon">!</div><div><b>Fragile result.</b> One 8c West Virginia longshot is almost the entire profit. Remove that single trade and the eight paper trades lose <b>{usd(abs(total_no_wv))}</b>. The 64-team NCAA tournament, which is the meaningful sample, lost money.</div></div>
+    if has_without:
+        page += f"""<div class="alert"><div class="icon">!</div><div><b>Fragile result.</b> One {pct(0.08)} {without} longshot is almost the entire profit. Remove that single trade and the {len(trades)} paper trades lose <b>{usd(abs(total_no))}</b>. The largest tournament lost money.</div></div>"""
 
-<section class="cards">{card_html}</section>
+    page += f"""<section class="cards">{card_html}</section>
 
 <section class="panel">
   <h2>The whole result in one picture</h2>
-  <p class="note">Cash P&amp;L if you staked <b>{usd(a.stake)} per trade</b> at the midpoint price. The Crown is an 8-team tournament; the NCAA is 64 teams. The right panel removes the single West Virginia winner.</p>
+  <p class="note">Cash P&L if you staked <b>{usd(a.stake)} per trade</b> at the midpoint price. {len(summaries)} tournaments, {n_teams} teams total. The right panel removes the {without} winner.</p>
   <div class="grid2">
     <div class="box">
       <h3>All trades</h3>
@@ -431,7 +463,7 @@ def main(argv=None):
       <div class="legend"><span><i class="sw green"></i>profit</span><span><i class="sw red"></i>loss</span></div>
     </div>
     <div class="box">
-      <h3>Without West Virginia</h3>
+      <h3>Without {without}</h3>
       <div class="chart"><div class="chart-head"><span>loss</span><span>zero</span></div>{cash_no_rows}</div>
       <div class="legend"><span><i class="sw red"></i>loss</span></div>
     </div>
@@ -446,12 +478,12 @@ def main(argv=None):
     {filter_rows}
   </div>
   <div class="legend"><span><i class="sw green"></i>average</span><span><i class="sw whisk"></i>±1 SE</span></div>
-  <p class="note" style="margin-top:12px">The 90% filter has <b>zero trades</b>. The 60% filter is the one used on this page: {len(trades)} trades, {cents(total_mean)} per contract, {total_hit:.0%} hit rate. That is not statistically distinguishable from zero.</p>
+  <p class="note" style="margin-top:12px">The {tightest * 100:.0f}% filter has <b>zero trades</b>. The {a.min_sure * 100:.0f}% filter is the one used on this page: {len(trades)} trades, {cents(total_mean)} per contract, {total_hit:.0%} hit rate. That is not statistically distinguishable from zero.</p>
 </section>
 
 <section class="panel">
   <h2>Forecast scorecard</h2>
-  <p class="note">Brier and log loss are proper scoring rules: lower is better. Brier is ×100 so the digits are readable. The market won the big tournament; the model won the small one.</p>
+  <p class="note">Brier and log loss are proper scoring rules: lower is better. Brier is x100 so the digits are readable.</p>
   <div class="table-wrap"><table><thead><tr><th>Tournament</th><th class="num">Teams</th>
     <th class="num">Model Brier</th><th class="num">Market Brier</th>
     <th class="num">Model log loss</th><th class="num">Market log loss</th><th>Better</th>
@@ -460,15 +492,15 @@ def main(argv=None):
 
 <section class="panel">
   <h2>The trades</h2>
-  <p class="note">Eight paper trades at {a.min_edge * 100:.0f}c edge and {a.min_sure * 100:.0f}% sure. “Per $1” is profit per $1 payout contract after the {a.fee * 100:.1f}c fee. “On $100” is cash staked, so contracts = stake ÷ cost.</p>
-  {trade_table(trades)}
+  <p class="note">{len(trades)} paper trades at {a.min_edge * 100:.0f}c edge and {a.min_sure * 100:.0f}% sure. "Per $1" is profit per $1 payout contract after the {a.fee * 100:.1f}c fee. "On {usd(a.stake)}" is cash staked, so contracts = stake / cost.</p>
+  {trade_table(trades, a.stake)}
 </section>
 
 <section class="panel">
-  <h2>All 72 team probabilities</h2>
-  <p class="note">Every team in the two tournaments, sorted by edge. The 90% range is the 5th–95th percentile over 1,000 jittered runs.</p>
+  <h2>All {n_teams} team probabilities</h2>
+  <p class="note">Every team in the {len(summaries)} tournaments, sorted by edge. The 90% range is the 5th-95th percentile over {a.draws} jittered runs.</p>
   <a class="btn" download="bracket_report_data.csv" href="{download}">Download the data (CSV)</a>
-  <a class="btn ghost" href="#method">Method &amp; caveats</a>
+  <a class="btn ghost" href="#method">Method & caveats</a>
   <details><summary>Show the full table</summary>{all_table(all_rows)}</details>
 </section>
 
@@ -478,32 +510,30 @@ def main(argv=None):
     <div class="box">
       <h3>What was tested</h3>
       <ul>
-        <li><b>2026 NCAA men:</b> 64 teams, cutoff 19 Mar 2026 12:00 UTC, after the First Four, before the Round of 64. Champion: Michigan.</li>
-        <li><b>2026 Crown:</b> 8 teams, cutoff 1 Apr 2026 12:00 UTC. Champion: West Virginia.</li>
-        <li>Prices: Kalshi historical 1-minute candles, midpoint of YES bid/ask.</li>
+{tested_lines}        <li>Prices: Kalshi historical 1-minute candles, midpoint of YES bid/ask.</li>
         <li>Ratings: Elo from regular-season results before the tournament; no future games.</li>
-        <li>Model: exact bracket simulation, 1,000 jittered runs, {a.fee * 100:.1f}c fee.</li>
+        <li>Model: exact bracket simulation, {a.draws} jittered runs, {a.fee * 100:.1f}c fee.</li>
       </ul>
     </div>
     <div class="box">
       <h3>What it does not prove</h3>
       <ul>
-        <li>Two tournaments is a tiny sample. One champion is close to a coin flip.</li>
+        <li>{len(summaries)} tournaments is a tiny sample. One champion is close to a coin flip.</li>
         <li>The +{total_mean * 100:.1f}c average is driven by one 8c winner; the error bar is ±{total_se * 100:.1f}c.</li>
         <li>Midpoints are not fills. An 8c contract may not absorb {usd(a.stake)} of cash.</li>
         <li>No slippage, no liquidity limit, no taxes, no correlation adjustment.</li>
-        <li>The model is a gap finder, not a better forecaster: the market beat it on the 64-team test.</li>
+        <li>The model is a gap finder, not a better forecaster: the market beat it on the largest tournament.</li>
       </ul>
     </div>
   </div>
-  <p class="note" style="margin-top:14px">Reproduce with <code>python3 replay.py --season 2026</code>, then <code>python3 report.py</code>. Historical data from Kalshi’s public API. This is a research note, not financial advice.</p>
+  <p class="note" style="margin-top:14px">Reproduce with <code>python3 replay.py --season 2026 --label m_ncaa_2026 --out replays/m_ncaa_2026.csv</code>, then <code>python3 report.py</code>. Historical data from Kalshi's public API. This is a research note, not financial advice.</p>
 </section>
 
-<footer>Generated from {', '.join(esc(pretty(t.name)) for t in tours)}. Brier and log loss use normalized market title prices. Paper P&amp;L assumes every trade fills at the midpoint. Past results do not guarantee future results.</footer>
+<footer>Generated from {', '.join(esc(pretty(t.name)) for t in tours)}. Brier and log loss use normalized market title prices. Paper P&L assumes every trade fills at the midpoint. Past results do not guarantee future results.</footer>
 </div></body></html>
 """
     Path(a.out).write_text(page)
-    print(f"wrote {a.out} ({len(tours)} tournaments, {len(trades)} trades)")
+    print(f"wrote {a.out} ({len(summaries)} tournaments, {len(trades)} trades)")
     print(f"wrote {a.data} ({len(all_rows)} team rows)")
 
 

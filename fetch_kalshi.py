@@ -19,6 +19,8 @@ import csv
 import json
 import os
 import sys
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -31,8 +33,15 @@ def get(path, **params):
     if params:
         url += "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return json.load(r)
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt < 4:
+                time.sleep(2 ** attempt)
+                continue
+            raise
 
 
 def markets(event):
@@ -56,9 +65,10 @@ def team(m):
 def ask(m):
     """YES ask in dollars, the price paid to buy. Raises if nobody offers."""
     v = m.get("yes_ask_dollars")
-    if not v or float(v) <= 0:
-        raise ValueError(f"{m.get('ticker')}: no YES ask, so buying YES is not possible")
-    return float(v)
+    f = float(v) if v else None
+    if f is None or f <= 0 or f >= 1:
+        raise ValueError(f"{m.get('ticker')}: YES ask {v} not usable (must be 0 < ask < 1)")
+    return f
 
 
 def build(tournament, title_markets, game_markets, result=None):

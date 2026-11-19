@@ -34,6 +34,8 @@ def logit(p):
 def devig(pa, pb):
     """Remove the platform margin from a two-way price."""
     s = pa + pb
+    if not np.isfinite(s) or s <= 0:
+        raise ValueError(f"game prices must sum above zero, got {pa} and {pb}")
     return pa / s, pb / s
 
 
@@ -45,11 +47,15 @@ class Tournament:
         self.title = {}      # team index -> YES ask
         self.prior = {}      # team index -> rating in logit units
         self.winner = None   # team index, if a result is known
+        self._pos = {}       # team name -> index, kept in sync with teams
 
     def index(self, team):
-        if team not in self.teams:
+        i = self._pos.get(team)
+        if i is None:
+            i = len(self.teams)
             self.teams.append(team)
-        return self.teams.index(team)
+            self._pos[team] = i
+        return i
 
 
 def load_csv(path):
@@ -90,6 +96,11 @@ def check(t):
     if len(t.games) < n // 2:
         raise ValueError(f"{t.name}: need {n // 2} first-round games, got {len(t.games)}")
     seen = set()
+    for a, b, pa, pb in t.games:
+        if not (np.isfinite(pa) and np.isfinite(pb)) or not (0 < pa < 1 and 0 < pb < 1):
+            raise ValueError(f"{t.name}: game prices must be between 0 and 1, got {pa} and {pb}")
+        if pa + pb <= 0:
+            raise ValueError(f"{t.name}: game prices must sum above zero, got {pa} and {pb}")
     for a, b, _, _ in t.games[: n // 2]:
         if a in seen or b in seen:
             raise ValueError(f"{t.name}: first-round games must use each team once")
@@ -100,7 +111,13 @@ def check(t):
     if missing:
         raise ValueError(f"{t.name}: no title price for {', '.join(missing)}")
     title = np.array([t.title[i] for i in range(n)], dtype=float)
+    if not np.all(np.isfinite(title)) or np.any(title <= 0) or np.any(title >= 1):
+        raise ValueError(f"{t.name}: title prices must be between 0 and 1")
+    if title.sum() <= 0:
+        raise ValueError(f"{t.name}: title prices must sum above zero")
     prior = np.array([t.prior.get(i, 0.0) for i in range(n)], dtype=float)
+    if not np.all(np.isfinite(prior)):
+        raise ValueError(f"{t.name}: priors must be finite numbers")
     return n, t.games, title, prior
 
 
@@ -108,7 +125,7 @@ def fit_ratings(game_idx, game_p, prior, prior_weight=PRIOR_WEIGHT, iters=FIT_IT
     """Fit a rating per team so rating gaps match devigged game probabilities.
 
     game_p is (runs, games); prior is (runs, teams). Returns (runs, teams).
-    Gauss-Newton on squared error plus a pull toward the prior.
+    Logistic loss plus a pull toward the prior.
     """
     runs, n = prior.shape
     games = len(game_idx)

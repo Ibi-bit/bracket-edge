@@ -12,8 +12,9 @@ from pathlib import Path
 
 CUTOFF = 1773921600  # 2026-03-19T12:00:00Z
 TITLE_SLUG = "2026-ncaa-tournament-winner"
-SRC = Path("replays/m_ncaa_2026.csv")
-OUT = Path("cross/p_ncaa_2026.csv")
+HERE = Path(__file__).resolve().parent
+SRC = HERE / "replays/m_ncaa_2026.csv"
+OUT = HERE / "cross/p_ncaa_2026.csv"
 UA = "Mozilla/5.0 (X11; Linux x86_64) bracket-edge/1.0"
 
 TITLE = {

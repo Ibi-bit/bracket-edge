@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
-from backtest import profit
+from backtest import mean_se, profit
 from bracket_edge import FEE, GAME_NOISE, PRIOR_SD, analyse, check, load_csv, rows
 
 
@@ -26,13 +26,6 @@ def score(t, res):
     brier = np.sum((p - y) ** 2), np.sum((m - y) ** 2)
     logs = -np.log(p[t.winner]), -np.log(m[t.winner])
     return brier, logs
-
-
-def mean_se(xs):
-    xs = np.asarray(xs, dtype=float)
-    if len(xs) == 0:
-        return 0.0, 0.0
-    return xs.mean(), xs.std(ddof=1) / np.sqrt(len(xs))
 
 
 def main(argv=None):
@@ -71,9 +64,9 @@ def main(argv=None):
 
     n = sum(len(r) for _, _, r in got)
     b = np.sum(brier, axis=0) / n * 100
-    l = np.sum(logs, axis=0) / n
-    print(f"\nforecasts (per team): Brier x100 model {b[0]:.2f}, market {b[1]:.2f}; "
-          f"log loss model {l[0]:.4f}, market {l[1]:.4f}")
+    l = np.mean(logs, axis=0)
+    print(f"\nforecasts: Brier x100 (per team) model {b[0]:.2f}, market {b[1]:.2f}; "
+          f"log loss (per tournament) model {l[0]:.4f}, market {l[1]:.4f}")
 
     print(f"\n{'min edge':>8}{'min sure':>9}{'trades':>7}{'hit':>6}"
           f"{'profit/trade':>14}{'predicted':>10}")
@@ -85,6 +78,7 @@ def main(argv=None):
                     if r["edge"] >= me and r["sure"] >= ms:
                         xs.append((r, profit(t, t.index(r["team"]), r["side"], a.fee)))
             if not xs:
+                print(f"{me:8.2f}{ms:9.2f}{0:7}{'-':>6}{'-':>14}{'-':>10}")
                 continue
             vals = [v for _, v in xs]
             m, se = mean_se(vals)

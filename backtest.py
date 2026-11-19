@@ -11,7 +11,7 @@ import numpy as np
 
 from bracket_edge import (
     FEE, MIN_EDGE, MIN_SURE, DRAWS, PRIOR_SD, GAME_NOISE,
-    Tournament, analyse, check, devig, logit, rows, sigmoid, simulate,
+    Tournament, analyse, check, logit, rows, sigmoid, simulate,
 )
 
 
@@ -89,8 +89,8 @@ def run(tours, a):
 
 def mean_se(xs):
     xs = np.asarray(xs, dtype=float)
-    if len(xs) == 0:
-        return 0.0, 0.0
+    if len(xs) <= 1:
+        return xs.mean() if len(xs) == 1 else 0.0, 0.0
     return xs.mean(), xs.std(ddof=1) / np.sqrt(len(xs))
 
 

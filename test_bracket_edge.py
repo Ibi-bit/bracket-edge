@@ -130,7 +130,7 @@ def test_fetch_rejects_zero_ask():
     try:
         fetch_kalshi.ask(market("G-A", "A", 0.0))
     except ValueError as e:
-        assert "no YES ask" in str(e)
+        assert "not usable" in str(e)
     else:
         raise AssertionError("zero ask was accepted")
 
@@ -183,7 +183,7 @@ def test_visual_market_only():
     mr = visual.market_rows(t)
     assert [r["team"] for r in mr] == ["B", "C", "A"]
     page = visual.section(t, mr, False, "prices only", 100.0)
-    assert "YES ask" in page and "model mean" not in page
+    assert "market price" in page and "model mean" not in page
 
 
 def test_visual_money():
