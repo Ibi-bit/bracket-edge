@@ -1,0 +1,11 @@
+tournament,type,a,b,pa,pb
+sample,game,A,B,0.70,0.32
+sample,game,C,D,0.55,0.47
+sample,title,A,,0.34,
+sample,title,B,,0.22,
+sample,title,C,,0.26,
+sample,title,D,,0.18,
+sample,prior,A,,1.0,
+sample,prior,B,,0.3,
+sample,prior,C,,0.2,
+sample,prior,D,,-0.2,

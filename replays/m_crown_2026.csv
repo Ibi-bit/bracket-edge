@@ -1,0 +1,22 @@
+tournament,type,a,b,pa,pb
+m_crown_2026,prior,West Virginia,,0.19502730182884848,
+m_crown_2026,prior,Stanford,,0.40934296097552425,
+m_crown_2026,prior,Rutgers,,-0.5398920248919743,
+m_crown_2026,prior,Creighton,,-0.13198486005501187,
+m_crown_2026,prior,Oklahoma,,0.1553930005081269,
+m_crown_2026,prior,Colorado,,-0.055259311741277815,
+m_crown_2026,prior,Minnesota,,-0.21131916045286994,
+m_crown_2026,prior,Baylor,,-0.16710996338445622,
+m_crown_2026,game,West Virginia,Stanford,0.49,0.51
+m_crown_2026,game,Rutgers,Creighton,0.365,0.635
+m_crown_2026,game,Oklahoma,Colorado,0.795,0.2
+m_crown_2026,game,Minnesota,Baylor,0.375,0.625
+m_crown_2026,title,West Virginia,,0.08,
+m_crown_2026,title,Stanford,,0.105,
+m_crown_2026,title,Rutgers,,0.025,
+m_crown_2026,title,Creighton,,0.165,
+m_crown_2026,title,Oklahoma,,0.395,
+m_crown_2026,title,Colorado,,0.03,
+m_crown_2026,title,Minnesota,,0.065,
+m_crown_2026,title,Baylor,,0.215,
+m_crown_2026,winner,West Virginia,,,
