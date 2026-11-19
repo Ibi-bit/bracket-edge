@@ -158,10 +158,15 @@ Title-only is the comparison the data supports.
 
 ### Betfair
 
-**Blocked without an account.** The Exchange API needs an application key and session token, and
-historical odds come from the paid Historic Data service. There are no credentials in this
-environment, so Betfair is not included and nothing is faked. To add it, provide
-`BETFAIR_APP_KEY` and `BETFAIR_SESSION_TOKEN` plus historical-package access.
+**Blocked without an account, not necessarily money.** A Betfair account is free. The delayed
+application key is free, and the **Basic** historical tier — 1-minute last-traded odds, no volume —
+is free too, but you still have to log in and “purchase” the free month before downloading. Live
+prices need a one-off £499 key (some older pages still say £299), and real-time data is not needed
+for this replay.
+
+There are no Betfair credentials here, so it is not included and nothing is faked. To add it:
+`BETFAIR_APP_KEY`, `BETFAIR_SESSION_TOKEN`, and a free Basic data order for the 2026 men's
+tournament — assuming Betfair listed those games.
 
 ---
 
